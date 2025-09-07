@@ -20,6 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,11 +44,22 @@ import com.example.expense_tracker.Utils
 import com.example.expense_tracker.data.model.ExpenseEntity
 import com.example.expense_tracker.ui.theme.Zinc
 import com.example.expense_tracker.widgets.ExpenseTextView
+import java.util.Calendar
 
 @Composable
 fun HomeScreen(navController: NavController) {
     val viewModel: HomeViewModel =
         HomeViewModelFactory(LocalContext.current).create(HomeViewModel::class.java)
+    fun getGreeting():String{
+        val calendar = Calendar.getInstance()
+        return when(calendar.get(Calendar.HOUR_OF_DAY)){
+            in 0..11 -> "Good Morning"
+            in 12..16 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
+
+
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -79,12 +94,12 @@ fun HomeScreen(navController: NavController) {
 
                 ) {
                     ExpenseTextView(
-                        text = "Good Afternoon",
+                        text = getGreeting(),
                         fontSize = 16.sp,
                         color = Color.White
                     )
                     ExpenseTextView(
-                        text = "Jhon Doe",
+                        text = "Akshat",
                         fontSize = 20.sp,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
@@ -121,25 +136,10 @@ fun HomeScreen(navController: NavController) {
                         height = Dimension.fillToConstraints
 
                     },
-                list = state.value
+                list = state.value.reversed()
 
             )
-            Image(
-                painter = painterResource(R.drawable.ic_add),
-                contentDescription = null,
-                modifier = Modifier
-                    .constrainAs(add) {
-                        bottom.linkTo(parent.bottom)
-                        end.linkTo(parent.end)
-                    }
-                    .padding(bottom = 20.dp, end = 20.dp)
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Zinc)
-                    .clickable {
-                        navController.navigate("/add")
-                    }
-            )
+
 
         }
     }
@@ -147,6 +147,17 @@ fun HomeScreen(navController: NavController) {
 
 @Composable
 fun CardItem(modifier: Modifier = Modifier, balance: String, income: String, expense: String) {
+
+
+    var valueVisible by remember { mutableStateOf(false) }
+
+    val eyeIcon = if(valueVisible){
+        R.drawable.eye_regular_full
+    }else{
+        R.drawable.eye_closed
+    }
+
+    val maskedText = "********"
     Column(
         modifier = modifier
             .padding(16.dp)
@@ -156,8 +167,8 @@ fun CardItem(modifier: Modifier = Modifier, balance: String, income: String, exp
             .background(
                 brush = Brush.linearGradient(
                     listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.error
+                        Color(0xFF3F51B5), // Indigo
+                        Color(0xFF9C27B0)
                     )
                 )
             )
@@ -179,7 +190,7 @@ fun CardItem(modifier: Modifier = Modifier, balance: String, income: String, exp
 
                 )
                 ExpenseTextView(
-                    text = balance,
+                    text = if(valueVisible){balance}else{maskedText},
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -188,9 +199,15 @@ fun CardItem(modifier: Modifier = Modifier, balance: String, income: String, exp
 
             }
             Image(
-                painter = painterResource(R.drawable.dots_menu),
+                painter = painterResource(eyeIcon),
                 contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(40.dp)
+                    .clickable {
+                        valueVisible=!valueVisible
+                    },
+
             )
         }
         Box(
@@ -202,7 +219,7 @@ fun CardItem(modifier: Modifier = Modifier, balance: String, income: String, exp
             CardRowItem(
                 modifier = Modifier.align(Alignment.CenterStart),
                 title = "Income",
-                value = income,
+                value = if(valueVisible){income}else{maskedText},
                 Image = R.drawable.ic_income
             )
             CardRowItem(
@@ -252,7 +269,11 @@ fun TransactionList(
                 title = item.title,
                 icon = icon,
                 date = item.date,
-                amount = item.amount.toString(),
+                amount = if(item.type=="Income"){
+                    "+$${item.amount.toString()}"
+                }else{
+                    "-$${item.amount.toString()}"
+                },
                 color = if (item.type == "Income") Color.Green else Color.Red,
             )
 

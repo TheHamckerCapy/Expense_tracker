@@ -11,6 +11,5 @@ data class ExpenseEntity(
     val title: String,
     val amount: Double,
     val date: Long,
-    val category: String,
     val type: String
 )

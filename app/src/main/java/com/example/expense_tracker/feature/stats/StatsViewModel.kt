@@ -13,6 +13,12 @@ import com.github.mikephil.charting.data.Entry
 class StatsViewModel(dao: ExpenseDao) : ViewModel() {
     val entries = dao.getAllExpensesByDate()
     val topEntries = dao.getTopExpenses()
+    val incomeEntries = dao.getAllIncomeByDate()
+    val topIncome = dao.getTopIncome()
+
+
+
+
     fun getEntriesForChart(entries: List<ExpenseSummary>): List<Entry>{
         val list = mutableListOf<Entry>()
         for(entry in entries){
